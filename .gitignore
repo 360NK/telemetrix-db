@@ -1,0 +1,42 @@
+
+
+# Prerequisites
+*.d
+
+# Object files
+*.o
+*.obj
+
+# Binary Executables 
+telemetrix-db
+telemetrix-engine
+
+# Libraries
+*.lib
+*.a
+
+# Shared objects (dynamic libraries)
+*.so
+*.dylib
+*.dll
+
+# Protobuf Generated Files (Regenerated on build)
+*.pb-c.c
+*.pb-c.h
+
+# Logs and Data 
+*.bin
+*.log
+*.sqlite
+logs/*
+*.db
+transit.db
+
+# OS Junk & Debugging
+.DS_Store
+.vscode/
+**/.DS_Store
+**/._*
+._*
+*.dSYM/
+notes.txt
