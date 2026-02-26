@@ -37,6 +37,8 @@ bool buffer_push(RingBuffer *rb, VehicleData item);
 bool buffer_pop(RingBuffer *rb, VehicleData *item);
 void buffer_signal_shutdown(RingBuffer *rb);
 
+bool buffer_is_shutdown(RingBuffer *rb);
+
 #ifdef __cplusplus
 }
 #endif

@@ -92,3 +92,11 @@ void buffer_signal_shutdown(RingBuffer *rb){
 
     pthread_mutex_unlock(&rb->lock);
 }
+
+bool buffer_is_shutdown(RingBuffer *rb) {
+    pthread_mutex_lock(&rb->lock);
+    bool state = rb->shutdown;
+    pthread_mutex_unlock(&rb->lock);
+
+    return state;
+}
