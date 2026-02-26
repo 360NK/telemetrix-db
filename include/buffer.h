@@ -4,6 +4,10 @@
 #include <pthread.h>
 #include <stdbool.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct {
     char fleet_number[16];
     char internal_id[16];
@@ -32,5 +36,9 @@ void buffer_destroy(RingBuffer *rb);
 bool buffer_push(RingBuffer *rb, VehicleData item);
 bool buffer_pop(RingBuffer *rb, VehicleData *item);
 void buffer_signal_shutdown(RingBuffer *rb);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include "../include/buffer.h"
+#include "../../include/buffer.h"
 
 RingBuffer* buffer_init(int capacity) {
     RingBuffer *rb = malloc(sizeof(RingBuffer));
