@@ -58,7 +58,7 @@ int main() {
         
         if (got_data) {
             consumed_count++;
-            if (consumed_count <= 10) {
+            if ((consumed_count <= 100 && strncmp(popped_bus.route_id,"UNKNOWN", sizeof(popped_bus.internal_id)) != 0) || strncmp(popped_bus.route_id, "85", sizeof(popped_bus.route_id)) == 0) {
                 std::cout << " Bus ID: " << popped_bus.internal_id 
                           << " | Route: " << popped_bus.route_id 
                           << " | Speed: " << popped_bus.speed << " km/h\n";

@@ -15,7 +15,15 @@ typedef struct {
     float lat;
     float lon;
     float speed;
-    
+    int occupancy_status;
+    int occupancy_percentage; 
+
+    // --- THE NEW DATA ---
+    float bearing;
+    uint64_t timestamp;
+    int current_status;
+    int congestion_level;
+    char stop_id[32];
 } VehicleData;
 
 typedef struct {
