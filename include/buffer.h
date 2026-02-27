@@ -14,6 +14,8 @@ typedef struct {
     char route_id[16];
     float lat;
     float lon;
+    float speed;
+    
 } VehicleData;
 
 typedef struct {

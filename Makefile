@@ -6,6 +6,8 @@ CXX = clang++
 CFLAGS = -Wall -Wextra -O3 -std=c11
 CXXFLAGS = -Wall -Wextra -O3 -std=c++17
 
+LDFLAGS = -lpthread -lcurl -lprotobuf-c -lh3
+
 # Directories
 BIN_DIR = bin
 BUILD_DIR = build
@@ -15,7 +17,10 @@ MAIN_TARGET = $(BIN_DIR)/telemetrix-db
 BENCH_TARGET = $(BIN_DIR)/benchmark_buffer
 
 # Source files
-C_SOURCES = src/ingestion/buffer.c
+C_SOURCES = src/ingestion/buffer.c \
+            src/ingestion/fetcher.c \
+            src/ingestion/parser.c \
+            src/ingestion/gtfs-realtime.pb-c.c
 CXX_MAIN_SOURCES = src/main.cpp
 CXX_BENCH_SOURCES = tests/benchmark_buffer.cpp
 
@@ -37,11 +42,11 @@ directories:
 
 # 1. Link the Main App
 $(MAIN_TARGET): $(C_OBJECTS) $(CXX_MAIN_OBJECTS)
-	$(CXX) $(CXXFLAGS) -o $(MAIN_TARGET) $(C_OBJECTS) $(CXX_MAIN_OBJECTS) -lpthread
+	$(CXX) $(CXXFLAGS) -o $(MAIN_TARGET) $(C_OBJECTS) $(CXX_MAIN_OBJECTS) $(LDFLAGS)
 
 # 2. Link the Benchmark App
 $(BENCH_TARGET): $(C_OBJECTS) $(CXX_BENCH_OBJECTS)
-	$(CXX) $(CXXFLAGS) -o $(BENCH_TARGET) $(C_OBJECTS) $(CXX_BENCH_OBJECTS) -lpthread
+	$(CXX) $(CXXFLAGS) -o $(BENCH_TARGET) $(C_OBJECTS) $(CXX_BENCH_OBJECTS) $(LDFLAGS)
 
 # Compile C files
 $(BUILD_DIR)/%.o: src/%.c
