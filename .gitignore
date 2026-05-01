@@ -1,42 +1,51 @@
-
-
-# Prerequisites
+# Dependency files
 *.d
 
 # Object files
 *.o
 *.obj
 
-# Binary Executables 
+# Build output directories
+bin/
+build/
+
+# Binary executables accidentally built in repo root
 telemetrix-db
 telemetrix-engine
+benchmark_buffer
 
 # Libraries
 *.lib
 *.a
 
-# Shared objects (dynamic libraries)
+# Shared objects
 *.so
 *.dylib
 *.dll
 
-# Protobuf Generated Files (Regenerated on build)
-*.pb-c.c
-*.pb-c.h
+# Debug symbols
+*.dSYM/
 
-# Logs and Data 
+# Logs and runtime data
 *.bin
 *.log
 *.sqlite
-logs/*
 *.db
 transit.db
+logs/
 
-# OS Junk & Debugging
+# Large/local transit data
+TTC Routes and Schedule Data/
+
+# Local scratch files
+notes.txt
+scratch/
+tmp/
+
+# Editor/OS files
 .DS_Store
-.vscode/
 **/.DS_Store
 **/._*
 ._*
-*.dSYM/
-notes.txt
+.vscode/
+
