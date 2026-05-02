@@ -1,5 +1,6 @@
 #include <iostream>
 #include <atomic>
+#include <cstddef>
 #include <cstdint>
 #include <new>
 #include <thread>
@@ -74,7 +75,7 @@ void load_static_gtfs() {
             route_names[id] = name;
         }
     } else {
-         std::cerr << "[WARNING] routes.txt not found.\n";
+        std::cerr << "[WARNING] routes.txt not found.\n";
     }
 }
 
@@ -125,7 +126,7 @@ int main() {
 
     load_static_gtfs();
 
-    // Allocate the unified lock-free memory arena on the heap once.
+    // Allocate the fixed-size, 64-byte-aligned spatial arena once at startup.
     HexBucket* database_arena = new (std::align_val_t(64)) HexBucket[BUCKET_COUNT];
 
     std::cout << "[MEMORY] Arena allocated: " 
@@ -169,8 +170,8 @@ int main() {
             uint8_t head = target_bucket.window.head;
 
             target_bucket.window.speeds[head] = popped_bus.speed;
-            // dummy timestamp
-            target_bucket.window.timestamps[head] = 123456789;
+
+            target_bucket.window.timestamps[head] = static_cast<uint32_t>(popped_bus.timestamp);
 
             target_bucket.window.head = (head + 1) % 60;
 
