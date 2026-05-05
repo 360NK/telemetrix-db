@@ -14,6 +14,12 @@ telemetrix-db
 telemetrix-engine
 benchmark_buffer
 
+# NOTE: keep include/gtfs-realtime.pb-c.h and src/ingestion/gtfs-realtime.pb-c.c tracked
+# because the current Makefile compiles them directly.
+# Duplicate generated protobuf outputs not used by current build
+proto/*.pb-c.c
+proto/*.pb-c.h
+
 # Libraries
 *.lib
 *.a
@@ -36,6 +42,7 @@ logs/
 
 # Large/local transit data
 TTC Routes and Schedule Data/
+TTC Routes and Schedules Data/
 
 # Local scratch files
 notes.txt
