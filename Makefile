@@ -21,7 +21,8 @@ C_SOURCES = src/ingestion/buffer.c \
             src/ingestion/fetcher.c \
             src/ingestion/parser.c \
             src/ingestion/gtfs-realtime.pb-c.c
-CXX_MAIN_SOURCES = src/main.cpp
+CXX_MAIN_SOURCES = src/main.cpp \
+				   src/storage/storage.cpp
 CXX_BENCH_SOURCES = tests/benchmark_buffer.cpp
 
 # Object mapping

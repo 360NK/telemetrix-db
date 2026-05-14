@@ -1,12 +1,8 @@
 #include <iostream>
-#include <atomic>
-#include <cstddef>
 #include <cstdint>
-#include <new>
 #include <thread>
 #include <chrono>
 #include <pthread.h>
-#include <h3/h3api.h> // Uber's Spatial Library
 
 #include <unordered_map>
 #include <fstream>
@@ -14,16 +10,12 @@
 #include <string>
 
 #include "../include/buffer.h"
-#include "../include/arena.h"
+#include "../include/storage.hpp"
 
 extern "C" {
     uint8_t* fetch_gtfs_data(const char* url, size_t* out_size);
     void parse_and_queue(uint8_t* buffer, size_t len, RingBuffer* rb);
 }
-
-static_assert(sizeof(TimeWindow) == 484, "TimeWindow must be 484 bites.");
-static_assert(alignof(HexBucket) == 64, "HexBucket must be 64-byte aligned");
-static_assert(sizeof(HexBucket) == 512, "HexBucket must be exactly 512 bytes");
 
 std::unordered_map<std::string, std::string> stop_names;
 std::unordered_map<std::string, std::string> route_names;
@@ -126,12 +118,7 @@ int main() {
 
     load_static_gtfs();
 
-    // Allocate the fixed-size, 64-byte-aligned spatial arena once at startup.
-    HexBucket* database_arena = new (std::align_val_t(64)) HexBucket[BUCKET_COUNT];
-
-    std::cout << "[MEMORY] Arena allocated: " 
-            << (sizeof(HexBucket) * BUCKET_COUNT) / (1024 * 1024) 
-            << " MB allocated with 64-byte cache alignment.\n";
+    SpatialArena arena;
 
     engine_buffer = buffer_init(1024);
     if (!engine_buffer) {
@@ -155,38 +142,9 @@ int main() {
                 continue; 
             }
 
-            LatLng geo = { degsToRads(popped_bus.lat), degsToRads(popped_bus.lon) };
-            H3Index hex_id;
-            latLngToCell(&geo, 9, &hex_id);
-
-            size_t arena_idx = hex_id & (BUCKET_COUNT - 1);
-            HexBucket& target_bucket = database_arena[arena_idx];
-
-            while (target_bucket.lock.test_and_set(std::memory_order_acquire)) {
-                // Spin wait...
+            if (arena.update(popped_bus.lat, popped_bus.lon, popped_bus.speed, popped_bus.timestamp)) {
+                total_processed++;
             }
-
-            target_bucket.h3_index = hex_id; 
-            uint8_t head = target_bucket.window.head;
-
-            target_bucket.window.speeds[head] = popped_bus.speed;
-
-            target_bucket.window.timestamps[head] = static_cast<uint32_t>(popped_bus.timestamp);
-
-            target_bucket.window.head = (head + 1) % 60;
-
-            target_bucket.lock.clear(std::memory_order_release);
-            
-            total_processed++;
-
-            // if (total_processed % 500 == 0) {
-            //     std::cout << "[CORE] Bus " << popped_bus.fleet_number 
-            //               << " (Route " << popped_bus.route_id << ") | "
-            //               << "Speed: " << popped_bus.speed << " km/h | "
-            //               << "Load: " << get_occupancy_string(popped_bus.occupancy_status) << " | "
-            //               << "Bearing: " << popped_bus.bearing << "° | "
-            //               << "Heading to Stop: " << popped_bus.stop_id << "\n";
-            // }
 
             if (popped_bus.occupancy_status > 1 && popped_bus.occupancy_status  < 6) {
                 // Safe lookups (fallback to ID if not found in map)
@@ -210,7 +168,6 @@ int main() {
     buffer_signal_shutdown(engine_buffer);
     pthread_join(ing_tid, NULL);
     buffer_destroy(engine_buffer);
-    operator delete[](database_arena, std::align_val_t(64));
 
     return 0;
 }
