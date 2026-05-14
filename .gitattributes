@@ -1,0 +1,8 @@
+# Generated protobuf-c files — exclude from language stats
+src/ingestion/gtfs-realtime.pb-c.c linguist-generated=true
+proto/gtfs-realtime.pb-c.c linguist-generated=true
+include/gtfs-realtime.pb-c.h linguist-generated=true
+proto/gtfs-realtime.pb-c.h linguist-generated=true
+
+# arena.h uses C++ features (atomic_flag, alignas) — reclassify
+include/arena.h linguist-language=C++
