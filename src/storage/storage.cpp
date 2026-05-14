@@ -22,7 +22,7 @@ SpatialArena::SpatialArena()
 
 SpatialArena::~SpatialArena()
 {
-    operator delete[](arena_, std::align_val_t(64));
+    delete[] arena_;
 }
 
 bool SpatialArena::update(double lat, double lon, float speed, uint64_t timestamp)
@@ -38,6 +38,10 @@ bool SpatialArena::update(double lat, double lon, float speed, uint64_t timestam
     HexBucket& bucket = arena_[arena_idx];
 
     while (bucket.lock.test_and_set(std::memory_order_acquire)) {}
+
+    if (bucket.h3_index != 0 && bucket.h3_index != hex_id) {
+        bucket.window = TimeWindow{};
+    }
 
     bucket.h3_index = hex_id;
     const uint8_t head = bucket.window.head;

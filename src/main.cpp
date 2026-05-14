@@ -3,6 +3,8 @@
 #include <thread>
 #include <chrono>
 #include <pthread.h>
+#include <cstdlib>
+#include <cstring>
 
 #include <unordered_map>
 #include <fstream>
@@ -156,7 +158,7 @@ int main() {
                 std::cout << "[PASSENGERS DETECTED] \n";
                 std::cout << "[CORE] Bus " << popped_bus.fleet_number 
                           << " (Route " << route_display << ") | "
-                          << "Speed: " << popped_bus.speed << " km/h | "
+                          << "Speed: " << (popped_bus.speed * 3.6f) << " km/h | "
                           << "Load: " << get_occupancy_string(popped_bus.occupancy_status) << " | "
                           << "Percent Load: " << popped_bus.occupancy_percentage << "% | "
                           << "Bearing: " << popped_bus.bearing << "° | "

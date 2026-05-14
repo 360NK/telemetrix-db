@@ -91,7 +91,7 @@ update calls `latLngToCell` before bucket selection and window writes. It does
 not measure network fetch, protobuf parsing, live GTFS variability, or
 multi-writer contention.
 
-*Environment: macOS, clang/clang++, `-O3`, median of 6 local runs per benchmark.*
+*Environment: 2017 MacBook Air, macOS, clang/clang++ with `-O3`, median of 6 local runs per benchmark.*
 
 ---
 

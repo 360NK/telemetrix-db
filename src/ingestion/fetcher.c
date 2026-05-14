@@ -2,6 +2,7 @@
 #include <curl/curl.h>
 #include <string.h>
 #include <stdint.h>
+#include <stdio.h>
 
 struct MemoryStruct {
     char *memory;
