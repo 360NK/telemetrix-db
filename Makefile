@@ -15,6 +15,7 @@ BUILD_DIR = build
 # Targets
 MAIN_TARGET = $(BIN_DIR)/telemetrix-db
 BENCH_TARGET = $(BIN_DIR)/benchmark_buffer
+STORAGE_BENCH_TARGET = $(BIN_DIR)/benchmark_storage
 
 # Source files
 C_SOURCES = src/ingestion/buffer.c \
@@ -31,7 +32,7 @@ CXX_MAIN_OBJECTS = $(patsubst src/%.cpp, $(BUILD_DIR)/%.o, $(CXX_MAIN_SOURCES))
 CXX_BENCH_OBJECTS = $(patsubst tests/%.cpp, $(BUILD_DIR)/tests/%.o, $(CXX_BENCH_SOURCES))
 
 # Default rule builds both!
-all: directories $(MAIN_TARGET) $(BENCH_TARGET)
+all: directories $(MAIN_TARGET) $(BENCH_TARGET) $(STORAGE_BENCH_TARGET)
 
 # Directory creation
 directories:
@@ -48,6 +49,8 @@ $(MAIN_TARGET): $(C_OBJECTS) $(CXX_MAIN_OBJECTS)
 # 2. Link the Benchmark App
 $(BENCH_TARGET): $(C_OBJECTS) $(CXX_BENCH_OBJECTS)
 	$(CXX) $(CXXFLAGS) -o $(BENCH_TARGET) $(C_OBJECTS) $(CXX_BENCH_OBJECTS) $(LDFLAGS)
+$(STORAGE_BENCH_TARGET): $(BUILD_DIR)/storage/storage.o $(BUILD_DIR)/tests/benchmark_storage.o
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
 
 # Compile C files
 $(BUILD_DIR)/%.o: src/%.c

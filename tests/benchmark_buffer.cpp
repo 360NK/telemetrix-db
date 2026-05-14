@@ -1,78 +1,73 @@
 #include <iostream>
+#include <cstring>
 #include <chrono>
 #include <pthread.h>
-#include <stdint.h>
-
 #include "../include/buffer.h"
 
-extern "C" {
-    uint8_t* fetch_gtfs_data(const char* url, size_t* out_size);
-    void parse_and_queue(uint8_t* buffer, size_t len, RingBuffer* rb);
-}
+static constexpr int N_RECORDS = 1000000;
+static constexpr int CAPACITY = 1024;
 
-RingBuffer* engine_buffer;
+RingBuffer* g_buf;
 
-void* producer_thread(void* arg) {
-    (void)arg; 
+void* producer(void*) {
+    VehicleData item{};
+    strncpy(item.internal_id, "SYN001", sizeof(item.internal_id) - 1);
+    item.lat = 43.7f;
+    item.lon = -79.4f;
+    item.speed = 42.0f;
+    item.timestamp = 1700000000ULL;
 
-    const char* ttc_url = "https://bustime.ttc.ca/gtfsrt/vehicles";
-    size_t payload_size = 0;
-
-    std::cout << "[PRODUCER] Reaching out to TTC Servers...\n";
-    
-    uint8_t* raw_protobuf = fetch_gtfs_data(ttc_url, &payload_size);
-
-    if (raw_protobuf != nullptr && payload_size > 0) {
-        std::cout << "[PRODUCER] Success! Downloaded " << payload_size << " bytes.\n";
-        std::cout << "[PRODUCER] Handing binary blob to the Protobuf Parser...\n";
-        
-        parse_and_queue(raw_protobuf, payload_size, engine_buffer);
-    } else {
-        std::cerr << "[PRODUCER] ERROR: Failed to download TTC data.\n";
+    for (int i = 0; i < N_RECORDS; ++i) {
+        buffer_push(g_buf, item);
     }
-    
-    buffer_signal_shutdown(engine_buffer);
+
     return nullptr;
 }
 
 int main() {
-    std::cout << "[SYSTEM] Booting Live TTC Data Bridge...\n";
-    engine_buffer = buffer_init(1024);
-
-    if (!engine_buffer) {
-        std::cerr << "[FATAL] Buffer allocation failed.\n";
+    // Warm-up: touches memory pages, lets OS scheduler settle
+    g_buf = buffer_init(CAPACITY);
+    if (!g_buf) {
+        std::cerr << "buffer_init failed\n";
         return 1;
     }
 
-    pthread_t prod_tid;
-    pthread_create(&prod_tid, NULL, producer_thread, NULL);
+    pthread_t warm_tid;
+    pthread_create(&warm_tid, nullptr, producer, nullptr);
+    VehicleData out{};
+    for (int i = 0; i < N_RECORDS; ++i) {
+        buffer_pop(g_buf, &out);
+    }
+    pthread_join(warm_tid, nullptr);
+    buffer_destroy(g_buf);
 
-    int consumed_count = 0;
-    VehicleData popped_bus = {};
-    
-    std::cout << "\n--- INCOMING TTC BUSES ---\n";
-
-    while (true) {
-        bool is_shut = buffer_is_shutdown(engine_buffer);
-        bool got_data = buffer_pop(engine_buffer, &popped_bus);
-        
-        if (got_data) {
-            consumed_count++;
-            if ((consumed_count <= 100 && strncmp(popped_bus.route_id,"UNKNOWN", sizeof(popped_bus.internal_id)) != 0) || strncmp(popped_bus.route_id, "85", sizeof(popped_bus.route_id)) == 0) {
-                std::cout << " Bus ID: " << popped_bus.internal_id 
-                          << " | Route: " << popped_bus.route_id 
-                          << " | Speed: " << popped_bus.speed << " km/h\n";
-            }
-        } else if (is_shut) {
-            break; 
-        }
+    // Timed run
+    g_buf = buffer_init(CAPACITY);
+    if (!g_buf) {
+        std::cerr << "buffer_init failed\n";
+        return 1;
     }
 
-    pthread_join(prod_tid, NULL);
+    auto t0 = std::chrono::steady_clock::now();
 
-    std::cout << "--------------------------\n";
-    std::cout << "[SYSTEM] Bridge Closed. Total real buses processed: " << consumed_count << "\n";
+    pthread_t tid;
+    pthread_create(&tid, nullptr, producer, nullptr);
+    for (int i = 0; i < N_RECORDS; ++i) {
+        buffer_pop(g_buf, &out);
+    }
 
-    buffer_destroy(engine_buffer);
+    auto t1 = std::chrono::steady_clock::now();
+    pthread_join(tid, nullptr);
+
+    double elapsed = std::chrono::duration<double>(t1 - t0).count();
+    double throughput = N_RECORDS / elapsed;
+
+    std::cout << "=== Ring Buffer Throughput Benchmark ===\n";
+    std::cout << "Records   : " << N_RECORDS << "\n";
+    std::cout << "Capacity  : " << CAPACITY  << "\n";
+    std::cout << "Elapsed   : " << elapsed   << " s\n";
+    std::cout << "Throughput: " << static_cast<long long>(throughput) << " records/sec\n";
+
+    buffer_destroy(g_buf);
     return 0;
 }
