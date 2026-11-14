@@ -12,6 +12,7 @@ static_assert(sizeof(HexBucket) == 512, "HexBucket must be exactly 512 bytes.");
 
 namespace {
 constexpr int H3_RESOLUTION = 9;
+constexpr int UNUSED_DIGIT_BITS = (15 - H3_RESOLUTION) * 3;
 }
 
 SpatialArena::SpatialArena()
@@ -34,7 +35,7 @@ bool SpatialArena::update(double lat, double lon, float speed, uint64_t timestam
         return false;
     }
 
-    const std::size_t arena_idx = hex_id & (BUCKET_COUNT - 1);
+    const std::size_t arena_idx = (hex_id >> UNUSED_DIGIT_BITS) & (BUCKET_COUNT -1);
     HexBucket& bucket = arena_[arena_idx];
 
     while (bucket.lock.test_and_set(std::memory_order_acquire)) {}
